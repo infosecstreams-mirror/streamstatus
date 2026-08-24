@@ -97,9 +97,9 @@ func (s *StreamersRepo) gitCommit() error {
 	}
 	commitMessage := ""
 	if s.online {
-		commitMessage = fmt.Sprintf("🟢 %s has gone online! [no ci]", s.streamer)
+		commitMessage = fmt.Sprintf("🟢 %s has gone online!", s.streamer)
 	} else {
-		commitMessage = fmt.Sprintf("☠️  %s has gone offline! [no ci]", s.streamer)
+		commitMessage = fmt.Sprintf("☠️  %s has gone offline!", s.streamer)
 	}
 	_, err = w.Commit(commitMessage, &git.CommitOptions{
 		Author: &object.Signature{
