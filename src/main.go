@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	httpauth "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/nicklaw5/helix/v2"
 	"github.com/nikoksr/notify"
 	"github.com/nikoksr/notify/service/pushbullet"
@@ -27,23 +26,20 @@ func main() {
 	// Setup file and repo paths.
 	var repoUrl string
 	if len(os.Getenv("SS_GH_REPO")) == 0 {
-		log.Info("no SS_GH_REPO specified in environment, defaulting to: https://github.com/infosecstreams/infosecstreams.github.io")
-		repoUrl = "https://github.com/infosecstreams/infosecstreams.github.io"
+		log.Info("no SS_GH_REPO specified in environment, defaulting to: https://github.com/infosecstreams-mirror/infosecstreams.github.io")
+		repoUrl = "https://github.com/infosecstreams-mirror/infosecstreams.github.io"
+	} else {
+		repoUrl = os.Getenv("SS_GH_REPO")
 	}
-	repoPath := strings.Split(repoUrl, "/")[4]
-	filePath := repoPath + "/index.md"
-	iFilePath := repoPath + "/inactive.md"
-	activeCsvPath := repoPath + "/streamers.csv"
-	inactiveCsvPath := repoPath + "/inactive_streamers.csv"
+	parts := strings.Split(strings.TrimSuffix(repoUrl, "/"), "/")
+	owner := parts[len(parts)-2]
+	repoPath := parts[len(parts)-1]
 
 	// Setup auth.
-	if len(os.Getenv("SS_USERNAME")) == 0 || len(os.Getenv("SS_TOKEN")) == 0 || len(os.Getenv("SS_SECRETKEY")) == 0 {
-		log.Fatalln("error: no SS_USERNAME and/or SS_TOKEN and/or SS_SECRETKEY specified in environment!")
+	if len(os.Getenv("SS_TOKEN")) == 0 || len(os.Getenv("SS_SECRETKEY")) == 0 {
+		log.Fatalln("error: no SS_TOKEN and/or SS_SECRETKEY specified in environment!")
 	}
-	auth := &httpauth.BasicAuth{
-		Username: os.Getenv("SS_USERNAME"),
-		Password: os.Getenv("SS_TOKEN"),
-	}
+	ghToken := os.Getenv("SS_TOKEN")
 
 	if len(os.Getenv("TW_CLIENT_ID")) == 0 || len(os.Getenv("TW_CLIENT_SECRET")) == 0 {
 		log.Fatalln("error: no TW_CLIENT_ID and/or TW_CLIENT_SECRET specified in environment! https://dev.twitch.tv/console/app")
@@ -78,17 +74,22 @@ func main() {
 
 	// Create StreamersRepo object
 	var repo = StreamersRepo{
-		auth:               auth,
-		activeCsvPath:      activeCsvPath,
-		inactiveCsvPath:    inactiveCsvPath,
-		inactiveFilePath:   iFilePath,
-		indexFilePath:      filePath,
-		repoPath:           repoPath,
-		url:                repoUrl,
+		GitHubToken:        ghToken,
+		Owner:              owner,
+		Repo:               repoPath,
+		StatusMap:          make(map[string]StreamerState),
 		client:             client,
 		notificationClient: notifier,
 		mutex:              &sync.Mutex{},
 	}
+	
+	err = repo.fetchRemoteStatus()
+	if err != nil {
+		log.Warnf("failed to fetch initial remote status.json (might not exist yet): %v", err)
+	} else {
+		log.Infof("Successfully fetched initial status.json with %d streamers.", len(repo.StatusMap))
+	}
+
 	port := ":8080"
 	// Google Cloud Run defaults to 8080. Their platform
 	// sets the $PORT ENV var if you override it with, e.g.:
