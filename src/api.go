@@ -127,7 +127,10 @@ func (app *App) handleAddStreamer(w http.ResponseWriter, r *http.Request) {
 	userID := usersResp.Data.Users[0].ID
 
 	// 3. Subscribe to EventSub Webhooks
-	callbackURL := "https://streamstatus.wupinyin.co.uk/webhook/callbacks"
+	callbackURL := os.Getenv("SS_CALLBACK_URL")
+	if callbackURL == "" {
+		callbackURL = "https://streamstatus.wupinyin.co.uk/webhook/callbacks"
+	}
 	secret := os.Getenv("SS_SECRETKEY")
 
 	events := []string{"stream.online", "stream.offline", "channel.update"}
