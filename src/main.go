@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime/debug"
+	"syscall"
+	"time"
 	_ "embed"
-	// "strings"
-
 	"github.com/nicklaw5/helix/v2"
 	// "github.com/nikoksr/notify"
 	// "github.com/nikoksr/notify/service/pushbullet"
@@ -103,6 +105,29 @@ func main() {
 	http.HandleFunc("/api/streamers", limiter.limitMiddleware(app.handleStreamers))
 	http.HandleFunc("/webhook/callbacks", app.handleWebhook)
 
-	log.Printf("server starting on %s", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	srv := &http.Server{
+		Addr:    port,
+		Handler: nil, // uses DefaultServeMux
+	}
+
+	go func() {
+		log.Printf("server starting on %s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shut down the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("server forced to shutdown:", err)
+	}
+
+	log.Println("server exiting")
 }
