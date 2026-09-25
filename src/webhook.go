@@ -30,7 +30,7 @@ type eventSubNotification struct {
 
 func contains(slice []string, val string) bool {
 	for _, item := range slice {
-		if strings.ToLower(item) == strings.ToLower(val) {
+		if strings.EqualFold(item, val) {
 			return true
 		}
 	}

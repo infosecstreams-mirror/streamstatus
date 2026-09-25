@@ -5,13 +5,10 @@ go 1.26
 require (
 	github.com/lib/pq v1.12.3
 	github.com/nicklaw5/helix/v2 v2.34.0
-	github.com/nikoksr/notify v1.5.0
 	github.com/sirupsen/logrus v1.10.1
 )
 
 require (
-	github.com/cschomburg/go-pushbullet v0.0.0-20171206132031-67759df45fbb // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
-	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 )

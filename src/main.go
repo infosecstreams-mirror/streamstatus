@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
-	"strings"
+	// "strings"
 	"sync"
 
 	"github.com/nicklaw5/helix/v2"
