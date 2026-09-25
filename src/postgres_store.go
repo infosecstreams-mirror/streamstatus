@@ -95,9 +95,9 @@ func (s *PostgresStore) UpdateStatus(username string, isOnline bool, game string
 		VALUES ($1, $2, $3, $4, $5, CASE WHEN $2 = TRUE THEN NOW() ELSE NOW() END)
 		ON CONFLICT (username) DO UPDATE 
 		SET is_online = EXCLUDED.is_online,
-		    game = EXCLUDED.game,
-		    language = EXCLUDED.language,
-		    tags = EXCLUDED.tags,
+		    game = CASE WHEN EXCLUDED.game != '' THEN EXCLUDED.game ELSE streamers.game END,
+		    language = CASE WHEN EXCLUDED.language != '' THEN EXCLUDED.language ELSE streamers.language END,
+		    tags = CASE WHEN EXCLUDED.tags != '' THEN EXCLUDED.tags ELSE streamers.tags END,
 		    last_seen = CASE WHEN EXCLUDED.is_online = TRUE THEN NOW() ELSE streamers.last_seen END;
 	`
 	_, err := s.db.Exec(query, username, isOnline, game, language, tagsStr)
