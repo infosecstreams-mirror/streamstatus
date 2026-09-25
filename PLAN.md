@@ -5,11 +5,11 @@
 ### Sprint 1: PostgreSQL REST API Migration
 - [x] Create backend abstraction interface (`store.go`)
 - [x] Implement `PostgresStore` backend (`postgres_store.go`)
-- [ ] Implement `CsvStore` fallback backend (`csv_store.go`)
-- [ ] Rip out `go-git` dependencies from `main.go` and `StreamStatus.go`
-- [ ] Create `GET /api/status` endpoint for frontend hydration
-- [ ] Create `POST /api/streamers` admin endpoint for adding new streamers
-- [ ] Wire Twitch EventSub webhook subscriptions into the new `POST /api/streamers` endpoint
+- [x] Implement `CsvStore` fallback backend (`csv_store.go`)
+- [x] Rip out `go-git` dependencies from `main.go` and `StreamStatus.go`
+- [x] Create `GET /api/status` endpoint for frontend hydration
+- [x] Create `POST /api/streamers` admin endpoint for adding new streamers
+- [x] Wire Twitch EventSub webhook subscriptions into the new `POST /api/streamers` endpoint
 
 ## Notes
 - We are migrating away from the Git-based `data` branch to a proper REST API.
