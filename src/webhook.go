@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"context"
+	// "context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -132,9 +132,9 @@ func (app *App) fetchStreamInfo(userID string) (helix.Stream, error) {
 		}
 		
 		if i == 3 {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			app.notifier.Send(ctx, "failed to get stream info", err.Error())
+			// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			// defer cancel()
+			// app.notifier.Send(ctx, "failed to get stream info", err.Error())
 			return helix.Stream{}, err
 		}
 		time.Sleep(time.Second)

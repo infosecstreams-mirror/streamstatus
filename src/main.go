@@ -9,8 +9,8 @@ import (
 	"sync"
 
 	"github.com/nicklaw5/helix/v2"
-	"github.com/nikoksr/notify"
-	"github.com/nikoksr/notify/service/pushbullet"
+	// "github.com/nikoksr/notify"
+	// "github.com/nikoksr/notify/service/pushbullet"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,7 +19,7 @@ var version = "unknown"
 type App struct {
 	store    Store
 	client   *helix.Client
-	notifier *notify.Notify
+	// notifier *notify.Notify
 	mutex    *sync.Mutex
 }
 
@@ -57,6 +57,7 @@ func main() {
 	client.SetAppAccessToken(access_token.Data.AccessToken)
 
 	// Setup notifications
+	/*
 	if len(os.Getenv("SS_PUSHBULLET_APIKEY")) == 0 || len(os.Getenv("SS_PUSHBULLET_DEVICES")) == 0 {
 		log.Fatalln("error: no SS_PUSHBULLET_APIKEY and/or SS_PUSHBULLET_DEVICES specified in environment! https://www.pushbullet.com/#settings/account")
 	}
@@ -66,11 +67,12 @@ func main() {
 		pushbulletService.AddReceivers(device)
 	}
 	notifier.UseServices(pushbulletService)
+	*/
 
 	app := &App{
 		store:    store,
 		client:   client,
-		notifier: notifier,
+		// notifier: notifier,
 		mutex:    &sync.Mutex{},
 	}
 
