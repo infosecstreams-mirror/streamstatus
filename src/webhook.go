@@ -65,9 +65,6 @@ func (app *App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("OK"))
 
-	app.mutex.Lock()
-	defer app.mutex.Unlock()
-
 	switch vals.Subscription.Type {
 	case "stream.offline":
 		var offlineEvent helix.EventSubStreamOfflineEvent

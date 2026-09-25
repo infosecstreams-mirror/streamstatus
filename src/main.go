@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 	_ "embed"
 	// "strings"
-	"sync"
 
 	"github.com/nicklaw5/helix/v2"
 	// "github.com/nikoksr/notify"
@@ -24,7 +23,6 @@ type App struct {
 	store    Store
 	client   *helix.Client
 	// notifier *notify.Notify
-	mutex    *sync.Mutex
 }
 
 func main() {
@@ -82,7 +80,6 @@ func main() {
 		store:    store,
 		client:   client,
 		// notifier: notifier,
-		mutex:    &sync.Mutex{},
 	}
 
 	port := ":8080"
