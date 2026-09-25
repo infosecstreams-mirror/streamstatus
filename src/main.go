@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	_ "embed"
 	// "strings"
 	"sync"
 
@@ -15,6 +16,9 @@ import (
 )
 
 var version = "unknown"
+
+//go:embed api_docs.html
+var apiDocsHTML []byte
 
 type App struct {
 	store    Store
@@ -85,6 +89,14 @@ func main() {
 	limiter := newRateLimiter(5, 10)
 
 	// Register handlers
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(apiDocsHTML)
+	})
 	http.HandleFunc("/api/status", limiter.limitMiddleware(app.handleGetStatus))
 	http.HandleFunc("/api/streamers", limiter.limitMiddleware(app.handleAddStreamer))
 	http.HandleFunc("/webhook/callbacks", app.handleWebhook)

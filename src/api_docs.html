@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamStatus API Reference</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        p.subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .endpoint-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .endpoint-card:nth-child(2) { animation-delay: 0.2s; }
+        .endpoint-card:nth-child(3) { animation-delay: 0.4s; }
+
+        .endpoint-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .method {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        .method.get {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .method.post {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .path {
+            font-family: monospace;
+            font-size: 1.25rem;
+            color: #e2e8f0;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.public {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge.admin {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .description {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+        }
+
+        .code-block {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #a5b4fc;
+        }
+
+        .code-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-bottom-left-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Syntax Highlighting */
+        .token-keyword { color: #c678dd; }
+        .token-string { color: #98c379; }
+        .token-url { color: #61afef; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>StreamStatus API</h1>
+            <p class="subtitle">The official public API for the InfosecStreams community. Access real-time streamer status data securely and lightning fast.</p>
+        </header>
+
+        <main>
+            <!-- GET /api/status -->
+            <section class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/status</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p class="description">
+                    Retrieves the current live status, game, and tags for all tracked infosec streamers. This endpoint is entirely public and is designed to be easily consumed by any fork of the InfosecStreams website. 
+                    <br><br><strong>Rate Limit:</strong> 5 requests per second per IP.
+                </p>
+                <div class="code-block">
+                    <span class="code-label">cURL</span>
+                    <pre><code>curl -X GET <span class="token-url">https://streamstatus.wupinyin.co.uk/api/status</span></code></pre>
+                </div>
+                <br>
+                <div class="code-block">
+                    <span class="code-label">Response (JSON)</span>
+                    <pre><code>{
+  <span class="token-string">"discomouse"</span>: {
+    <span class="token-string">"online"</span>: true,
+    <span class="token-string">"game"</span>: <span class="token-string">"Science & Technology"</span>,
+    <span class="token-string">"language"</span>: <span class="token-string">"en"</span>,
+    <span class="token-string">"tags"</span>: [<span class="token-string">"cybersecurity"</span>, <span class="token-string">"infosec"</span>]
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- POST /api/streamers -->
+            <section class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/api/streamers</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p class="description">
+                    Registers a new streamer in the database and automatically negotiates an EventSub webhook subscription with Twitch. Requires the administrative Bearer token.
+                </p>
+                <div class="code-block">
+                    <span class="code-label">cURL</span>
+                    <pre><code>curl -X POST <span class="token-url">https://streamstatus.wupinyin.co.uk/api/streamers</span> \
+  -H <span class="token-string">"Authorization: Bearer &lt;YOUR_SS_ADMIN_TOKEN&gt;"</span> \
+  -H <span class="token-string">"Content-Type: application/json"</span> \
+  -d <span class="token-string">'{"username": "SomeStreamer"}'</span></code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
