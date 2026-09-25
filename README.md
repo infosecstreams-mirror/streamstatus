@@ -1,134 +1,65 @@
-# StreamStatus
+# StreamStatus (infosecstreams-mirror)
 
-This program updates streamer's status on the [hacklist](https://infosecstreams.github.io/) by receiving Twitch EventSub webhook requests, editing the repo markdown, and committing the changes back to GitHub.
+This is the backend for the [infosecstreams-mirror](https://github.com/infosecstreams-mirror) project. It is a Go-based REST API and Twitch EventSub Webhook receiver that tracks the online/offline status of cybersecurity streamers.
 
-![Example Debug Output](./example.png)
+Instead of statically generating markdown files, this new architecture stores streamer activity in a **PostgreSQL database** and serves it dynamically to the frontend via a REST API.
 
-You need to subscribe to `stream.{offline,online}` events from the Twitch EventSub API. This program listens on `http://0.0.0.0:SS_PORT/webhook/callbacks` for webhook requests from twitch containing JSON EventSub data:
+## How It Works
 
-```json
-{
-  "subscription": {
-    "id": "607e9634-8600-450c-948e-8cc1380fa9fe",
-    "status": "enabled",
-    "type": "stream.offline",
-    "version": "1",
-    "condition": { "broadcaster_user_id": "555942272" },
-    "transport": {
-      "method": "webhook",
-      "callback": "https://98cf813101b4.ngrok.io/webhook/callbacks"
-    },
-    "created_at": "2021-07-24T08:09:34.816454134Z",
-    "cost": 1
-  },
-  "event": {
-    "broadcaster_user_id": "555942272",
-    "broadcaster_user_login": "goproslowyo",
-    "broadcaster_user_name": "GoProSlowYo"
-  }
-}
-```
+1. Users add a new streamer to the database (currently via API/CLI).
+2. The backend fetches their Twitch User ID and registers a subscription with Twitch's EventSub system for `stream.online`, `stream.offline`, and `channel.update` events.
+3. When Twitch sends a webhook notification, the backend verifies the cryptographic signature (using `SS_SECRETKEY`) and updates the streamer's `is_online`, `game`, `language`, `tags`, and `last_seen` metadata in the PostgreSQL database.
+4. The frontend fetches the live leaderboard from `/api/streamers`.
 
-Since Twitch removed "Hack the Box" and "TryHackMe" as categories we just look for various Cybersecurity related tags to guess if it's content we want to show as "online".
+## Environment Variables
 
-This is the current list of games and (optional) tags in the code:
-
-```golang
-var VALID_GAMES = []string{
-  "just chatting",
-  "science \u0026 technology",
-  "software and game development",
-  "talk shows \u0026 podcasts",
-}
-
-var OPTIONAL_TAGS = []string{
-  "ctf", "capturetheflag",
-  "htb", "hackthebox",
-  "thm", "tryhackme",
-  "infosec", "cybersecurity", "informationsecurity",
-  "hacker", "hacking", "bugbounty", "pentest", "security",
-  "reverseengineering", "malware", "malwareanalysis",
-  "iss", "infosecstream", "infosecstreams", "infosecstreamer", "infosecstreamers",
-}
-```
-
-The code is ~~bad~~ okay-ish and I feel ~~bad~~ okay-ish.
-
-## Build It
-
-Directly with go:
+To run the backend, you need to configure the following environment variables:
 
 ```shell
-go mod tidy
-go build -mod vendor -ldflags="-s -w" -o StreamStatus ./...
-```
-
----
-
-Or, build a docker image:
-
-```shell
-make build-ss
-# or
-docker build -t streamstatus:dev .
-```
-
-## Use It
-
-1. Update the env vars in streamstatus.env for docker-compose (check streamstatus.env.example).
-1. Run it in docker:
-
-```shell
-$ make ss-run
-INFO[0000] server starting on :8080
-```
-
-Run directly with ENV vars:
-
-```shell
-SS_PORT=3000 SS_SECRETKEY=secret SS_TOKEN=token SS_USERNAME=username TW_CLIENT_ID=client_id TW_CLIENT_SECRET=client_secret SS_PUSHBULLET_APIKEY=abc123 SS_PUSHBULLET_DEVICES=phone ./StreamStatus
-```
-
----
-
-Or, export required ENV vars:
-
-```shell
-# Port to listen on
+# Port to listen on (Default: 3000)
 export SS_PORT=3000
-# Secret key to HMAC EventSub message
-export SS_SECRETKEY=secret
-# GitHub personal access token
-export SS_TOKEN=token
-# GitHub username
-export SS_USERNAME=username
-# Twitch Client ID
-export TW_CLIENT_ID=client_id
-# Twitch Secret
-export TW_CLIENT_SECRET=client_secret
-# Pushbullet API Key
-export SS_PUSHBULLET_APIKEY=myAPIkey
-# Pushbullet devices (comma separated) to send notifications to
-export SS_PUSHBULLET_DEVICES=myDevice,anotherDevice
 
-# Run:
+# Secret key used to securely sign and verify Twitch EventSub payloads
+export SS_SECRETKEY=your_secure_secret_key
+
+# PostgreSQL Connection String
+export DATABASE_URL="postgres://user:password@localhost:5432/streamstatus?sslmode=disable"
+
+# The publicly accessible URL where Twitch will send webhook events
+export SS_CALLBACK_URL="https://api.yourdomain.com/webhook/callbacks"
+
+# Twitch API Credentials (requires a developer application at dev.twitch.tv)
+export TW_CLIENT_ID=your_twitch_client_id
+export TW_CLIENT_SECRET=your_twitch_client_secret
+```
+
+## Endpoints
+
+- `GET /api/status` - Healthcheck endpoint
+- `GET /api/streamers` - Returns all tracked streamers and their current status (optionally filter with `?status=online` or `?status=offline`)
+- `POST /webhook/callbacks` - Internal endpoint used exclusively by Twitch EventSub
+
+## Running with Docker
+
+We provide a durable `alpine`-based Docker image.
+
+```shell
+docker build -t streamstatus:latest .
+
+docker run -d \
+  -p 3000:3000 \
+  -e SS_PORT=3000 \
+  -e SS_SECRETKEY=your_secret \
+  -e DATABASE_URL="postgres://user:pass@db:5432/streamstatus?sslmode=disable" \
+  -e SS_CALLBACK_URL="https://api.yourdomain.com/webhook/callbacks" \
+  -e TW_CLIENT_ID=client_id \
+  -e TW_CLIENT_SECRET=client_secret \
+  streamstatus:latest
+```
+
+## Running Directly (Bare Metal)
+
+```shell
+go build -o StreamStatus ./src/...
 ./StreamStatus
-```
-
----
-
-Or, if you built the docker image:
-
-```shell
-docker run --rm -it -e SS_PORT=9001 -e SS_SECRETKEY=secret -e SS_TOKEN=token -e SS_USERNAME=username -e TW_CLIENT_ID=client_id -e TW_CLIENT_SECRET=client_secret -e SS_PUSHBULLET_APIKEY=abc123 -e SS_PUSHBULLET_DEVICES=phone streamstatus:dev
-```
-
----
-
-Or, use `docker-compose` after setting environment variables in `streamstatus.env`
-
-```shell
-docker-compose --build up
-# or to background it:
-docker-compose --build up -d
 ```
