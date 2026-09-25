@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
@@ -23,6 +24,11 @@ func NewPostgresStore(connectionString string) (*PostgresStore, error) {
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
+	// Configure connection pool
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
 
 	store := &PostgresStore{db: db}
 	if err := store.initSchema(); err != nil {
