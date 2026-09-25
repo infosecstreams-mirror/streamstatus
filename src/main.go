@@ -41,6 +41,11 @@ func main() {
 		log.Fatalf("failed to init database: %v", err)
 	}
 
+	// Prune inactive streamers (> 1 year)
+	if err := store.PruneInactiveStreamers(); err != nil {
+		log.Errorf("failed to prune inactive streamers: %v", err)
+	}
+
 	// Setup Twitch Client
 	if len(os.Getenv("TW_CLIENT_ID")) == 0 || len(os.Getenv("TW_CLIENT_SECRET")) == 0 {
 		log.Fatalln("error: no TW_CLIENT_ID and/or TW_CLIENT_SECRET specified in environment! https://dev.twitch.tv/console/app")

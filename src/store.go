@@ -23,4 +23,7 @@ type Store interface {
 	
 	// UpdateStatus updates the live status and metadata of a streamer
 	UpdateStatus(username string, isOnline bool, game string, language string, tags []string) error
+	
+	// PruneInactiveStreamers removes streamers that have exceeded the inactivity threshold
+	PruneInactiveStreamers() error
 }

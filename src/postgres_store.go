@@ -39,8 +39,10 @@ func (s *PostgresStore) initSchema() error {
 		is_online BOOLEAN DEFAULT FALSE,
 		game VARCHAR(255) DEFAULT '',
 		language VARCHAR(10) DEFAULT '',
-		tags TEXT DEFAULT ''
-	);`
+		tags TEXT DEFAULT '',
+		last_seen TIMESTAMP DEFAULT NOW()
+	);
+	ALTER TABLE streamers ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT NOW();`
 	_, err := s.db.Exec(query)
 	return err
 }
@@ -89,14 +91,21 @@ func (s *PostgresStore) RemoveStreamer(username string) error {
 func (s *PostgresStore) UpdateStatus(username string, isOnline bool, game string, language string, tags []string) error {
 	tagsStr := strings.Join(tags, ",")
 	query := `
-		INSERT INTO streamers (username, is_online, game, language, tags)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO streamers (username, is_online, game, language, tags, last_seen)
+		VALUES ($1, $2, $3, $4, $5, CASE WHEN $2 = TRUE THEN NOW() ELSE NOW() END)
 		ON CONFLICT (username) DO UPDATE 
 		SET is_online = EXCLUDED.is_online,
 		    game = EXCLUDED.game,
 		    language = EXCLUDED.language,
-		    tags = EXCLUDED.tags;
+		    tags = EXCLUDED.tags,
+		    last_seen = CASE WHEN EXCLUDED.is_online = TRUE THEN NOW() ELSE streamers.last_seen END;
 	`
 	_, err := s.db.Exec(query, username, isOnline, game, language, tagsStr)
+	return err
+}
+
+func (s *PostgresStore) PruneInactiveStreamers() error {
+	// Remove streamers who haven't been online in over a year
+	_, err := s.db.Exec("DELETE FROM streamers WHERE last_seen < NOW() - INTERVAL '1 year'")
 	return err
 }
