@@ -4,14 +4,20 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/time/rate"
 )
 
+type client struct {
+	limiter  *rate.Limiter
+	lastSeen int64
+}
+
 // rateLimiter manages a map of IP addresses to rate limiters
 type rateLimiter struct {
-	ips map[string]*rate.Limiter
+	ips map[string]*client
 	mu  *sync.RWMutex
 	r   rate.Limit
 	b   int
@@ -20,19 +26,23 @@ type rateLimiter struct {
 // newRateLimiter creates a new IP rate limiter (r = requests per second, b = burst limit)
 func newRateLimiter(r float64, b int) *rateLimiter {
 	limiter := &rateLimiter{
-		ips: make(map[string]*rate.Limiter),
+		ips: make(map[string]*client),
 		mu:  &sync.RWMutex{},
 		r:   rate.Limit(r),
 		b:   b,
 	}
 
-	// Simple cleanup routine to prevent memory leaks from old IPs over time
+	// Cleanup routine to prevent memory leaks from old IPs
 	go func() {
 		for {
-			time.Sleep(time.Hour)
+			time.Sleep(time.Minute)
 			limiter.mu.Lock()
-			// For simplicity in this small app, we can just clear the map occasionally
-			limiter.ips = make(map[string]*rate.Limiter)
+			for ip, c := range limiter.ips {
+				lastSeen := time.Unix(0, atomic.LoadInt64(&c.lastSeen))
+				if time.Since(lastSeen) > 3*time.Minute {
+					delete(limiter.ips, ip)
+				}
+			}
 			limiter.mu.Unlock()
 		}
 	}()
@@ -43,7 +53,7 @@ func newRateLimiter(r float64, b int) *rateLimiter {
 // getLimiter returns the rate limiter for the provided IP address
 func (i *rateLimiter) getLimiter(ip string) *rate.Limiter {
 	i.mu.RLock()
-	limiter, exists := i.ips[ip]
+	c, exists := i.ips[ip]
 	i.mu.RUnlock()
 
 	if !exists {
@@ -51,15 +61,17 @@ func (i *rateLimiter) getLimiter(ip string) *rate.Limiter {
 		defer i.mu.Unlock()
 		
 		// Double check it wasn't added while we were waiting for the lock
-		limiter, exists = i.ips[ip]
+		c, exists = i.ips[ip]
 		if !exists {
-			limiter = rate.NewLimiter(i.r, i.b)
-			i.ips[ip] = limiter
+			c = &client{
+				limiter: rate.NewLimiter(i.r, i.b),
+			}
+			i.ips[ip] = c
 		}
-		return limiter
 	}
 
-	return limiter
+	atomic.StoreInt64(&c.lastSeen, time.Now().UnixNano())
+	return c.limiter
 }
 
 // limitMiddleware applies the rate limiter to an HTTP handler
