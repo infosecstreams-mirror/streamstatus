@@ -81,9 +81,12 @@ func main() {
 		port = ":" + os.Getenv("PORT")
 	}
 
+	// Create rate limiter (5 requests per second, burst of 10)
+	limiter := newRateLimiter(5, 10)
+
 	// Register handlers
-	http.HandleFunc("/api/status", app.handleGetStatus)
-	http.HandleFunc("/api/streamers", app.handleAddStreamer)
+	http.HandleFunc("/api/status", limiter.limitMiddleware(app.handleGetStatus))
+	http.HandleFunc("/api/streamers", limiter.limitMiddleware(app.handleAddStreamer))
 	http.HandleFunc("/webhook/callbacks", app.handleWebhook)
 
 	log.Printf("server starting on %s", port)
