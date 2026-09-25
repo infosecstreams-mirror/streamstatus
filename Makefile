@@ -1,4 +1,4 @@
-IMAGE_NAME = ghcr.io/infosecstreams/streamstatus
+IMAGE_NAME = ghcr.io/infosecstreams-mirror/streamstatus
 IMAGE_TAG = $(shell git describe --tags --always --dirty --long)
 
 .PHONY: help
@@ -21,13 +21,11 @@ build: test
 .PHONY: run
 run: build
 	docker run -it --rm -p 8080:8080 \
+	-e DATABASE_URL=postgres://username:password@localhost:5432/streamstatus?sslmode=disable \
+	-e TWITCH_CLIENT_ID=client_id \
+	-e TWITCH_CLIENT_SECRET=client_secret \
 	-e SS_SECRETKEY=secret \
-	-e SS_TOKEN=token \
-	-e SS_USERNAME=username \
-	-e TW_CLIENT_ID=client_id \
-	-e TW_CLIENT_SECRET=client_secret \
-	-e SS_PUSHBULLET_APIKEY=myAPIkey \
-	-e SS_PUSHBULLET_DEVICES=myDevice,anotherDevice \
+	-e SS_CALLBACK_URL=https://your-domain.com/api/webhook \
 	$(IMAGE_NAME):$(IMAGE_TAG)
 
 .PHONY: push
