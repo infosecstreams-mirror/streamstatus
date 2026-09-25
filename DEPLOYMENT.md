@@ -1,6 +1,6 @@
 # StreamStatus Self-Hosting Deployment Guide
 
-This guide provides step-by-step instructions for deploying the StreamStatus backend on your own custom Linux hardware or Virtual Private Server (VPS), completely avoiding Docker. It utilizes standard open-source tools: Systemd, PostgreSQL, Nginx (or Caddy), and `nftables` for security.
+This guide provides step-by-step instructions for deploying the StreamStatus backend on your own custom Linux hardware or Virtual Private Server (VPS), completely avoiding Docker. It utilizes standard open-source tools: Systemd, PostgreSQL, and Nginx (or Caddy).
 
 ## Prerequisites
 
@@ -143,62 +143,12 @@ sudo ln -s /etc/nginx/sites-available/streamstatus /etc/nginx/sites-enabled/
 sudo systemctl reload nginx
 ```
 
-## 5. Firewall Configuration (`nftables`)
-
-We secure the server using `nftables`. Note that our API runs on a private internal port (8080) and should **not** be exposed directly. Nginx will handle external connections on ports 80 and 443.
-
-Edit your `nftables.conf`:
-
-```bash
-sudo nano /etc/nftables.conf
-```
-
-A minimal, secure configuration looks like this:
-
-```nft
-#!/usr/sbin/nft -f
-
-flush ruleset
-
-table inet filter {
-    chain input {
-        type filter hook input priority 0; policy drop;
-
-        # Allow loopback traffic
-        iifname "lo" accept
-
-        # Allow established and related connections
-        ct state established,related accept
-
-        # Allow SSH
-        tcp dport 22 accept
-
-        # Allow HTTP and HTTPS (for Nginx)
-        tcp dport { 80, 443 } accept
-    }
-
-    chain forward {
-        type filter hook forward priority 0; policy drop;
-    }
-
-    chain output {
-        type filter hook output priority 0; policy accept;
-    }
-}
-```
-
-Apply the ruleset:
-```bash
-sudo nft -f /etc/nftables.conf
-sudo systemctl enable nftables
-```
-
-## 6. Verify Deployment
+## 5. Verify Deployment
 
 To ensure everything is working correctly:
 
 1. Check the application logs: `sudo journalctl -u streamstatus -f`
-2. Make a request to the API from the outside (since internal requests might not simulate your Nginx/Firewall setup properly):
+2. Make a request to the API from the outside (since internal requests might not simulate your reverse proxy or firewall setup properly):
    ```bash
    curl -I https://your-domain.com/api/status
    ```
