@@ -12,7 +12,6 @@ ARG VERSION
 ENV VERSION=${VERSION:-unknown}
 RUN GOOS=linux GOARCH=amd64 \
     go build \
-    -mod=vendor \
     -ldflags="-s -w -X main.version=${VERSION}" \
     -o StreamStatus ./...
 
