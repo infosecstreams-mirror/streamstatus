@@ -98,7 +98,7 @@ func main() {
 		w.Write(apiDocsHTML)
 	})
 	http.HandleFunc("/api/status", limiter.limitMiddleware(app.handleGetStatus))
-	http.HandleFunc("/api/streamers", limiter.limitMiddleware(app.handleAddStreamer))
+	http.HandleFunc("/api/streamers", limiter.limitMiddleware(app.handleStreamers))
 	http.HandleFunc("/webhook/callbacks", app.handleWebhook)
 
 	log.Printf("server starting on %s", port)

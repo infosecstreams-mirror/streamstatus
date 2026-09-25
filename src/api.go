@@ -42,11 +42,52 @@ func (app *App) handleGetStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (app *App) handleAddStreamer(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+func (app *App) handleStreamers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if r.Method == http.MethodGet {
+		app.handleGetStreamersList(w, r)
 		return
 	}
+	
+	if r.Method == http.MethodPost {
+		app.handleAddStreamer(w, r)
+		return
+	}
+
+	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+}
+
+func (app *App) handleGetStreamersList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	streamers, err := app.store.GetStreamers()
+	if err != nil {
+		http.Error(w, "failed to get streamers", http.StatusInternalServerError)
+		return
+	}
+
+	statusFilter := r.URL.Query().Get("status")
+	var filtered []Streamer
+
+	for _, s := range streamers {
+		if statusFilter == "online" && !s.IsOnline {
+			continue
+		}
+		if statusFilter == "offline" && s.IsOnline {
+			continue
+		}
+		filtered = append(filtered, s)
+	}
+
+	if filtered == nil {
+		filtered = []Streamer{} // return empty array instead of null
+	}
+
+	json.NewEncoder(w).Encode(filtered)
+}
+
+func (app *App) handleAddStreamer(w http.ResponseWriter, r *http.Request) {
 
 	// Validate Admin Token
 	token := r.Header.Get("Authorization")

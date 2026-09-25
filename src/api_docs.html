@@ -75,6 +75,7 @@
 
         .endpoint-card:nth-child(2) { animation-delay: 0.2s; }
         .endpoint-card:nth-child(3) { animation-delay: 0.4s; }
+        .endpoint-card:nth-child(4) { animation-delay: 0.6s; }
 
         .endpoint-card:hover {
             transform: translateY(-5px);
@@ -150,6 +151,7 @@
             padding: 1.5rem;
             overflow-x: auto;
             position: relative;
+            margin-bottom: 1rem;
         }
 
         .code-block pre {
@@ -181,7 +183,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Syntax Highlighting */
         .token-keyword { color: #c678dd; }
         .token-string { color: #98c379; }
         .token-url { color: #61afef; }
@@ -191,7 +192,7 @@
     <div class="container">
         <header>
             <h1>StreamStatus API</h1>
-            <p class="subtitle">The official public API for the InfosecStreams community. Access real-time streamer status data securely and lightning fast.</p>
+            <p class="subtitle">The official REST API for the InfosecStreams community. Secure, lightning fast, and updated via Webhooks in real-time.</p>
         </header>
 
         <main>
@@ -203,24 +204,49 @@
                     <span class="badge public">Public</span>
                 </div>
                 <p class="description">
-                    Retrieves the current live status, game, and tags for all tracked infosec streamers. This endpoint is entirely public and is designed to be easily consumed by any fork of the InfosecStreams website. 
-                    <br><br><strong>Rate Limit:</strong> 5 requests per second per IP.
+                    <strong>Legacy Endpoint:</strong> Retrieves all streamers as a mapped JSON object (keys are usernames). Primarily used by the original frontend app. <br><br><strong>Rate Limit:</strong> 5 requests per second per IP.
                 </p>
                 <div class="code-block">
                     <span class="code-label">cURL</span>
                     <pre><code>curl -X GET <span class="token-url">https://streamstatus.wupinyin.co.uk/api/status</span></code></pre>
                 </div>
-                <br>
+            </section>
+
+            <!-- GET /api/streamers -->
+            <section class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/streamers</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p class="description">
+                    <strong>New RESTful Endpoint:</strong> Retrieves a JSON array of streamers. You can pass a <code>status</code> query parameter to effortlessly filter the results without needing extra parsing logic.
+                </p>
+                
                 <div class="code-block">
-                    <span class="code-label">Response (JSON)</span>
-                    <pre><code>{
-  <span class="token-string">"discomouse"</span>: {
-    <span class="token-string">"online"</span>: true,
+                    <span class="code-label">All Streamers</span>
+                    <pre><code>curl -X GET <span class="token-url">https://streamstatus.wupinyin.co.uk/api/streamers</span></code></pre>
+                </div>
+                <div class="code-block">
+                    <span class="code-label">Online Streamers Only</span>
+                    <pre><code>curl -X GET <span class="token-url">https://streamstatus.wupinyin.co.uk/api/streamers?status=online</span></code></pre>
+                </div>
+                <div class="code-block">
+                    <span class="code-label">Offline (Inactive) Streamers Only</span>
+                    <pre><code>curl -X GET <span class="token-url">https://streamstatus.wupinyin.co.uk/api/streamers?status=offline</span></code></pre>
+                </div>
+
+                <div class="code-block">
+                    <span class="code-label">Response (JSON Array)</span>
+                    <pre><code>[
+  {
+    <span class="token-string">"username"</span>: <span class="token-string">"discomouse"</span>,
+    <span class="token-string">"is_online"</span>: true,
     <span class="token-string">"game"</span>: <span class="token-string">"Science & Technology"</span>,
     <span class="token-string">"language"</span>: <span class="token-string">"en"</span>,
     <span class="token-string">"tags"</span>: [<span class="token-string">"cybersecurity"</span>, <span class="token-string">"infosec"</span>]
   }
-}</code></pre>
+]</code></pre>
                 </div>
             </section>
 
