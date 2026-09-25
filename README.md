@@ -1,6 +1,6 @@
 # StreamStatus
 
-This program updates streamer's status on the [hacklist](https://infosecstreams.github.io/) by receiving Twitch EventSub webhook requests, editing the repo markdown, and committing the changes back to GitHub.
+This program updates streamer's status on the [hacklist](https://infosecstreams-mirror.github.io/) by receiving Twitch EventSub webhook requests, editing the repo markdown, and committing the changes back to GitHub.
 
 ![Example Debug Output](./example.png)
 

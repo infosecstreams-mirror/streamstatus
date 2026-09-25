@@ -26,8 +26,8 @@ func main() {
 	// Setup file and repo paths.
 	var repoUrl string
 	if len(os.Getenv("SS_GH_REPO")) == 0 {
-		log.Info("no SS_GH_REPO specified in environment, defaulting to: https://github.com/infosecstreams-mirror/infosecstreams.github.io")
-		repoUrl = "https://github.com/infosecstreams-mirror/infosecstreams.github.io"
+		log.Info("no SS_GH_REPO specified in environment, defaulting to: https://github.com/infosecstreams-mirror/infosecstreams-mirror.github.io")
+		repoUrl = "https://github.com/infosecstreams-mirror/infosecstreams-mirror.github.io"
 	} else {
 		repoUrl = os.Getenv("SS_GH_REPO")
 	}

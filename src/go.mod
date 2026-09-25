@@ -1,4 +1,4 @@
-module github.com/infosecstreams/StreamStatus
+module github.com/infosecstreams-mirror/StreamStatus
 
 go 1.27.0
 
