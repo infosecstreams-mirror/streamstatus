@@ -63,9 +63,10 @@ Add your configuration:
 ```env
 # /etc/streamstatus.env
 DATABASE_URL=postgres://streamuser:your_secure_password@localhost:5432/streamstatus?sslmode=disable
-TWITCH_CLIENT_ID=your_twitch_client_id
-TWITCH_CLIENT_SECRET=your_twitch_client_secret
+TW_CLIENT_ID=your_twitch_client_id
+TW_CLIENT_SECRET=your_twitch_client_secret
 SS_SECRETKEY=generate_a_random_secret_string
+SS_ADMIN_TOKEN=your_admin_token
 SS_CALLBACK_URL=https://your-domain.com/api/webhook
 ```
 

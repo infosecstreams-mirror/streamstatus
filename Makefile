@@ -22,9 +22,10 @@ build: test
 run: build
 	docker run -it --rm -p 8080:8080 \
 	-e DATABASE_URL=postgres://username:password@localhost:5432/streamstatus?sslmode=disable \
-	-e TWITCH_CLIENT_ID=client_id \
-	-e TWITCH_CLIENT_SECRET=client_secret \
+	-e TW_CLIENT_ID=client_id \
+	-e TW_CLIENT_SECRET=client_secret \
 	-e SS_SECRETKEY=secret \
+	-e SS_ADMIN_TOKEN=your_admin_token \
 	-e SS_CALLBACK_URL=https://your-domain.com/api/webhook \
 	$(IMAGE_NAME):$(IMAGE_TAG)
 
