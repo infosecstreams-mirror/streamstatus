@@ -60,6 +60,8 @@ func (app *App) handleStreamers(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) handleGetStreamersList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
 
 	streamers, err := app.store.GetStreamers()
 	if err != nil {

@@ -81,6 +81,7 @@ func (s *PostgresStore) GetStreamers() ([]Streamer, error) {
 }
 
 func (s *PostgresStore) AddStreamer(username string) error {
+	username = strings.ToLower(username)
 	_, err := s.db.Exec("INSERT INTO streamers (username) VALUES ($1) ON CONFLICT (username) DO NOTHING", username)
 	if err != nil {
 		log.Errorf("Failed to add streamer %s: %s", username, err)
@@ -90,11 +91,13 @@ func (s *PostgresStore) AddStreamer(username string) error {
 }
 
 func (s *PostgresStore) RemoveStreamer(username string) error {
+	username = strings.ToLower(username)
 	_, err := s.db.Exec("DELETE FROM streamers WHERE username = $1", username)
 	return err
 }
 
 func (s *PostgresStore) UpdateStatus(username string, isOnline bool, game string, language string, tags []string) error {
+	username = strings.ToLower(username)
 	tagsStr := strings.Join(tags, ",")
 	query := `
 		INSERT INTO streamers (username, is_online, game, language, tags, last_seen)

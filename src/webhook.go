@@ -20,6 +20,7 @@ var VALID_GAMES = []string{
 	"science & technology",
 	"software and game development",
 	"talk shows & podcasts",
+	"information security",
 }
 
 type eventSubNotification struct {
@@ -69,9 +70,6 @@ func (app *App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case "stream.offline":
 		var offlineEvent helix.EventSubStreamOfflineEvent
 		json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&offlineEvent)
-		if r.Header.Get("Twitch-Eventsub-Message-Retry") != "0" {
-			return
-		}
 		
 		log.Printf("offline event for: %s", offlineEvent.BroadcasterUserName)
 		err := app.store.UpdateStatus(offlineEvent.BroadcasterUserName, false, "", "", []string{})
@@ -82,9 +80,6 @@ func (app *App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case "stream.online":
 		var onlineEvent helix.EventSubStreamOnlineEvent
 		json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&onlineEvent)
-		if r.Header.Get("Twitch-Eventsub-Message-Retry") != "0" {
-			return
-		}
 
 		log.Printf("online event for: %s", onlineEvent.BroadcasterUserName)
 		stream, err := app.fetchStreamInfo(onlineEvent.BroadcasterUserID)
@@ -119,22 +114,21 @@ func (app *App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) fetchStreamInfo(userID string) (helix.Stream, error) {
-	for i := 1; i <= 3; i++ {
+	for i := 1; i <= 5; i++ {
 		streams, err := app.client.GetStreams(&helix.StreamsParams{UserIDs: []string{userID}})
 		if err == nil && streams.ErrorStatus == 0 {
 			if len(streams.Data.Streams) > 0 {
 				return streams.Data.Streams[0], nil
 			}
-			return helix.Stream{}, fmt.Errorf("no stream returned")
-		}
-		
-		if i == 3 {
-			// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			// defer cancel()
-			// app.notifier.Send(ctx, "failed to get stream info", err.Error())
+			// Twitch API can take a few seconds to populate stream info after webhook
+		} else if i == 5 {
 			return helix.Stream{}, err
 		}
-		time.Sleep(time.Second)
+		
+		if i == 5 {
+			break
+		}
+		time.Sleep(3 * time.Second)
 	}
-	return helix.Stream{}, fmt.Errorf("retries exhausted")
+	return helix.Stream{}, fmt.Errorf("retries exhausted, no stream returned")
 }
