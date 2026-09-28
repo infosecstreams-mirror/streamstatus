@@ -70,9 +70,6 @@ func (app *App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case "stream.offline":
 		var offlineEvent helix.EventSubStreamOfflineEvent
 		json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&offlineEvent)
-		if r.Header.Get("Twitch-Eventsub-Message-Retry") != "0" {
-			return
-		}
 		
 		log.Printf("offline event for: %s", offlineEvent.BroadcasterUserName)
 		err := app.store.UpdateStatus(offlineEvent.BroadcasterUserName, false, "", "", []string{})
@@ -83,9 +80,6 @@ func (app *App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case "stream.online":
 		var onlineEvent helix.EventSubStreamOnlineEvent
 		json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&onlineEvent)
-		if r.Header.Get("Twitch-Eventsub-Message-Retry") != "0" {
-			return
-		}
 
 		log.Printf("online event for: %s", onlineEvent.BroadcasterUserName)
 		stream, err := app.fetchStreamInfo(onlineEvent.BroadcasterUserID)
